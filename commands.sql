@@ -222,3 +222,174 @@ DROP USER 'devuser'@'localhost';
 
 -- Use when setting up DB users with specific privileges.
 
+-- ====================================
+-- 🔐 SECURITY & PERMISSIONS
+-- ====================================
+
+-- 27. GRANT / REVOKE (PostgreSQL & MySQL)
+GRANT SELECT, INSERT ON employees TO some_user;
+REVOKE INSERT ON employees FROM some_user;
+
+-- Use to manage permissions per table, per user.
+
+
+-- ====================================
+-- 🧱 CONSTRAINTS
+-- ====================================
+
+-- 28. PRIMARY KEY (enforced unique identifier)
+CREATE TABLE departments (
+    id INT PRIMARY KEY,
+    name VARCHAR(100)
+);
+
+-- 29. FOREIGN KEY (ensures referential integrity)
+CREATE TABLE employees (
+    id INT PRIMARY KEY,
+    department_id INT,
+    FOREIGN KEY (department_id) REFERENCES departments(id)
+);
+
+-- Use to ensure valid relationships between tables.
+
+-- 30. CHECK (data rule constraint)
+ALTER TABLE employees
+ADD CONSTRAINT chk_salary CHECK (salary >= 0);
+
+-- Use to prevent invalid data entry at table level.
+
+
+-- ====================================
+-- 🔃 STORED PROCEDURES & FUNCTIONS
+-- ====================================
+
+-- 31. CREATE PROCEDURE (MySQL example)
+DELIMITER //
+CREATE PROCEDURE GetEmployeesByDept(IN dept_name VARCHAR(50))
+BEGIN
+    SELECT * FROM employees WHERE department = dept_name;
+END //
+DELIMITER ;
+
+-- Use to encapsulate logic you want to reuse with input/output.
+
+
+-- 32. CREATE FUNCTION
+CREATE FUNCTION get_full_name(f_name VARCHAR(50), l_name VARCHAR(50))
+RETURNS VARCHAR(100)
+RETURN CONCAT(f_name, ' ', l_name);
+
+-- Use for reusable logic that returns a value.
+
+
+-- ====================================
+-- ⚙️ TRIGGERS
+-- ====================================
+
+-- 33. CREATE TRIGGER (automatic action on insert/update/delete)
+CREATE TRIGGER before_insert_employees
+BEFORE INSERT ON employees
+FOR EACH ROW
+SET NEW.created_at = NOW();
+
+-- Use when you need automatic behaviors (e.g., logging, timestamps).
+
+
+-- ====================================
+-- 🔄 UPSERT / MERGE
+-- ====================================
+
+-- 34. INSERT ... ON DUPLICATE KEY UPDATE (MySQL)
+INSERT INTO products (id, name, price)
+VALUES (1, 'Book', 20)
+ON DUPLICATE KEY UPDATE price = 20;
+
+-- 35. MERGE (standard in SQL Server, Oracle)
+MERGE INTO target_table t
+USING source_table s ON (t.id = s.id)
+WHEN MATCHED THEN UPDATE SET t.name = s.name
+WHEN NOT MATCHED THEN INSERT (id, name) VALUES (s.id, s.name);
+
+-- Use to combine insert and update logic into one operation.
+
+
+-- ====================================
+-- 🧪 TEMPORARY TABLES
+-- ====================================
+
+-- 36. CREATE TEMPORARY TABLE
+CREATE TEMPORARY TABLE temp_sales (
+    id INT,
+    revenue DECIMAL(10,2)
+);
+
+-- Use to store intermediate results (only exists during session).
+
+
+-- ====================================
+-- 🧊 CTEs (Common Table Expressions)
+-- ====================================
+
+-- 37. WITH (CTE)
+WITH top_employees AS (
+    SELECT * FROM employees WHERE salary > 100000
+)
+SELECT * FROM top_employees;
+
+-- Use for breaking down complex queries or improving readability.
+
+
+-- ====================================
+-- 🧮 WINDOW FUNCTIONS (Advanced Analytics)
+-- ====================================
+
+-- 38. ROW_NUMBER(), RANK(), DENSE_RANK()
+SELECT first_name, salary,
+       RANK() OVER (ORDER BY salary DESC) AS salary_rank
+FROM employees;
+
+-- Use to rank or number rows *within partitions*.
+
+-- 39. LAG() / LEAD()
+SELECT name, revenue,
+       LAG(revenue) OVER (ORDER BY year) AS prev_year_revenue
+FROM sales;
+
+-- Use for comparing values across rows (like year-over-year analysis).
+
+
+-- ====================================
+-- 💾 BACKUPS & RESTORE (platform-specific)
+-- ====================================
+
+-- 40. PostgreSQL: pg_dump (command line)
+-- Backup
+pg_dump -U username dbname > backup.sql
+
+-- Restore
+psql -U username dbname < backup.sql
+
+-- Use when exporting/importing full databases.
+
+-- 41. MySQL: mysqldump
+mysqldump -u root -p database_name > backup.sql
+
+-- Restore
+mysql -u root -p database_name < backup.sql
+
+
+-- ====================================
+-- 🕵️‍♂️ INFORMATION SCHEMA & METADATA
+-- ====================================
+
+-- 42. View all tables
+SELECT table_name FROM information_schema.tables
+WHERE table_schema = 'your_database_name';
+
+-- 43. View all columns in a table
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_name = 'employees';
+
+-- Use when introspecting or documenting your database.
+
